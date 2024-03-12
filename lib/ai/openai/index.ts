@@ -4,7 +4,7 @@ import { createMistralChatCompletion } from "../mistral";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-async function createAudioTranscription(file: Buffer) {
+export async function createAudioTranscription(file: Buffer) {
   fs.writeFileSync("audio.wav", file);
   const fileStream = fs.createReadStream("audio.wav");
 
@@ -14,7 +14,7 @@ async function createAudioTranscription(file: Buffer) {
   });
 }
 
-async function createOpenAIChatCompletion(model: string, text: string) {
+export async function createOpenAIChatCompletion(model: string, text: string) {
   const response = await openai.chat.completions.create({
     model,
     messages: [
@@ -35,7 +35,7 @@ async function createOpenAIChatCompletion(model: string, text: string) {
   );
 }
 
-async function createSpeech(text: string) {
+export async function createSpeech(text: string) {
   return await openai.audio.speech.create({
     model: "tts-1",
     voice: "onyx",
@@ -43,18 +43,9 @@ async function createSpeech(text: string) {
   });
 }
 
-async function createAudioResponse(text: string) {
+export async function createAudioResponse(text: string) {
   const mp3 = await createSpeech(text);
   const buffer = Buffer.from(await mp3.arrayBuffer());
-
-  return buffer;
-}
-
-export async function createAIResponse(modelName: string, blob: ArrayBuffer) {
-  const file = Buffer.from(blob);
-  const { text } = await createAudioTranscription(file);
-  const completion = await createMistralChatCompletion(modelName, text);
-  const buffer = await createAudioResponse(completion);
 
   return buffer;
 }
