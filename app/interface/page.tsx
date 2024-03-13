@@ -97,14 +97,17 @@ export default function Interface() {
    * @returns {Promise<void>}
    * @description Handles the speech to text conversion and adds utterance to conversation state
    */
-  const handleSpeechToText = useCallback(async (role: string, body: Blob) => {
+  const handleSpeechToText = async (
+    role: string,
+    body: Blob
+  ): Promise<void> => {
     const request = await fetch("/api/speech-to-text", {
       method: "POST",
       body,
     });
     const message = await request.text();
     setConversation((prev) => [...prev, { role, message }]);
-  }, []);
+  };
 
   useEffect(() => {
     const init = async () => {
