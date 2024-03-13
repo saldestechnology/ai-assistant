@@ -59,7 +59,7 @@ export default function Interface() {
     const responseAudio = new Audio(responseUrl);
 
     if (speechToText) {
-      handleSpeechToText("Jeffery", response);
+      handleSpeechToText("Jeffrey", response);
     }
 
     responseAudio.play();
