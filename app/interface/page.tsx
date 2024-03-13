@@ -22,10 +22,18 @@ export default function Interface() {
 
   const handleSelectBaseModel = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setBaseModel(e.target.value);
-    if (e.target.value === "openai") {
-      setModel("gpt-3.5-turbo");
-    } else {
-      setModel("open-mistral-7b");
+    switch (e.target.value) {
+      case "openai":
+        setModel("gpt-3.5-turbo");
+        break;
+      case "mistral":
+        setModel("open-mistral-7b");
+        break;
+      case "anthropic":
+        setModel("claude-3-opus-20240229");
+        break;
+      default:
+        break;
     }
   };
 
@@ -135,6 +143,7 @@ export default function Interface() {
             >
               <option value="openai">OpenAI</option>
               <option value="mistral">Mistral</option>
+              <option value="anthropic">Anthropic</option>
             </select>
             {baseModel === "openai" && (
               <select
@@ -157,6 +166,20 @@ export default function Interface() {
                 <option value="open-mixtral-8x7b">open-mixtral-8x7b</option>
                 <option value="mistral-small-latest">
                   mistral-small-latest
+                </option>
+              </select>
+            )}
+            {baseModel === "anthropic" && (
+              <select
+                title="Select model"
+                className="p-2 border bg-black text-white border-zinc-950 rounded-md"
+                onChange={(e) => setModel(e.target.value)}
+              >
+                <option value="claude-3-opus-20240229">
+                  claude-3-opus-20240229
+                </option>
+                <option value="claude-3-sonnet-20240229">
+                  claude-3-sonnet-20240229
                 </option>
               </select>
             )}

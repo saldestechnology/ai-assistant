@@ -7,6 +7,7 @@ import {
   createSpeechToText,
 } from "./openai";
 import { unlink } from "fs";
+import { createAnthropicChatCompletion } from "./anthropic";
 
 async function selectBaseModel(
   baseModel: string,
@@ -18,6 +19,8 @@ async function selectBaseModel(
       return await createOpenAIChatCompletion(modelName, text);
     case BaseModel.Mistral:
       return await createMistralChatCompletion(modelName, text);
+    case BaseModel.Anthropic:
+      return await createAnthropicChatCompletion(modelName, text);
     default:
       throw new Error("Invalid base model");
   }
