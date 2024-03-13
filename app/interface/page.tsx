@@ -109,6 +109,19 @@ export default function Interface() {
     setConversation((prev) => [...prev, { role, message }]);
   };
 
+  const initializeConversation = useCallback(async () => {
+    const request = await fetch("/api/memory/my-test-session-1");
+    const messages = await request.json();
+    setConversation(
+      messages.map((message: any) => {
+        if (message.id.includes("HumanMessage")) {
+          return { role: "User", message: message.kwargs.content };
+        }
+        return { role: "Jeffrey", message: message.kwargs.content };
+      })
+    );
+  }, []);
+
   useEffect(() => {
     const init = async () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -119,7 +132,8 @@ export default function Interface() {
       });
     };
     init();
-  }, []);
+    initializeConversation();
+  }, [initializeConversation]);
 
   return (
     <div className="flex flex-row h-screen max-h-screen">
@@ -222,7 +236,14 @@ export default function Interface() {
                   <span className="text-zinc-600 mr-4">
                     {conversation.role}:
                   </span>
-                  {conversation.message}
+                  {conversation.message.split("\n").map((message, index) => (
+                    <p
+                      key={`message-${index}`}
+                      className="text-white text-left py-4"
+                    >
+                      {message}
+                    </p>
+                  ))}
                 </h1>
               </div>
             ))}

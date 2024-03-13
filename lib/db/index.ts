@@ -34,3 +34,8 @@ export async function createModelWithMemory(
 
   return response ?? "I am sorry, I didn't understand that.";
 }
+
+export async function getMessagesBySessionId(sessionId: string) {
+  const memory = await createRedisBufferMemory(sessionId);
+  return JSON.stringify(await memory.chatHistory.getMessages());
+}
