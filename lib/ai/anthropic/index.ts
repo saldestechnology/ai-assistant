@@ -1,7 +1,7 @@
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
-function getAnthropicModel(modelName: string) {
+export function createAnthropicModel(modelName: string) {
   return new ChatAnthropic({
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
     modelName,
@@ -17,7 +17,7 @@ export async function createAnthropicChatCompletion(
     ["human", "{input}"],
   ]);
 
-  const model = getAnthropicModel(modelName);
+  const model = createAnthropicModel(modelName);
 
   const chain = prompt.pipe(model);
 

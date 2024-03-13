@@ -1,7 +1,7 @@
 import { ChatMistralAI } from "@langchain/mistralai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
-function getMistralModel(modelName: string) {
+export function createMistralModel(modelName: string) {
   return new ChatMistralAI({
     apiKey: process.env.MISTRAL_API_KEY,
     modelName,
@@ -17,7 +17,7 @@ export async function createMistralChatCompletion(
     ["human", "{input}"],
   ]);
 
-  const model = getMistralModel(modelName);
+  const model = createMistralModel(modelName);
 
   const chain = prompt.pipe(model);
 

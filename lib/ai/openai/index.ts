@@ -1,9 +1,19 @@
+import { createRedisBufferMemory } from "@/lib/db";
 import fs from "fs";
+import { ConversationChain } from "langchain/chains";
+import { ChatOpenAI } from "@langchain/openai";
 import OpenAI from "openai";
 import { Transcription } from "openai/resources/audio/transcriptions.mjs";
 import { v4 as uuid } from "uuid";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+export function createOpenAIChatModel(modelName: string) {
+  return new ChatOpenAI({
+    openAIApiKey: process.env.OPENAI_API_KEY,
+    modelName,
+  });
+}
 
 export async function createAudioTranscription(
   file: Buffer
@@ -41,6 +51,23 @@ export async function createOpenAIChatCompletion(model: string, text: string) {
     response?.choices[0]?.message?.content ??
     "I am sorry, I didn't understand that."
   );
+}
+
+export async function createOpenAIChatCompletionWithMemory(
+  modelName: string,
+  input: string,
+  sessionId: string
+) {
+  const chain = new ConversationChain({
+    llm: createOpenAIChatModel(modelName),
+    memory: await createRedisBufferMemory(sessionId),
+  });
+
+  const { response } = await chain.call({ input });
+
+  console.log({ response });
+
+  return response ?? "I am sorry, I didn't understand that.";
 }
 
 export async function createSpeech(text: string) {

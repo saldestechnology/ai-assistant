@@ -1,13 +1,19 @@
 import { BaseModel } from "@/types/BaseModel";
-import { createMistralChatCompletion } from "./mistral";
+import { createMistralChatCompletion, createMistralModel } from "./mistral";
 import {
   createAudioResponse,
   createAudioTranscription,
   createOpenAIChatCompletion,
+  createOpenAIChatCompletionWithMemory,
+  createOpenAIChatModel,
   createSpeechToText,
 } from "./openai";
 import { unlink } from "fs";
-import { createAnthropicChatCompletion } from "./anthropic";
+import {
+  createAnthropicChatCompletion,
+  createAnthropicModel,
+} from "./anthropic";
+import { createModelWithMemory } from "../db";
 
 async function selectBaseModel(
   baseModel: string,
@@ -26,6 +32,39 @@ async function selectBaseModel(
   }
 }
 
+export async function selectBaseModelWithMemory(
+  baseModel: string,
+  modelName: string,
+  sessionId: string,
+  text: string
+) {
+  switch (baseModel) {
+    case BaseModel.OpenAI:
+      return await createModelWithMemory(
+        modelName,
+        text,
+        sessionId,
+        createOpenAIChatModel
+      );
+    case BaseModel.Mistral:
+      return await createModelWithMemory(
+        modelName,
+        text,
+        sessionId,
+        createMistralModel
+      );
+    case BaseModel.Anthropic:
+      return await createModelWithMemory(
+        modelName,
+        text,
+        sessionId,
+        createAnthropicModel
+      );
+    default:
+      throw new Error("Invalid base model");
+  }
+}
+
 export async function createSpeechToSpeechResponse(
   baseModel: string,
   modelName: string,
@@ -34,6 +73,25 @@ export async function createSpeechToSpeechResponse(
   const file = Buffer.from(blob);
   const [_fileName, response] = await createAudioTranscription(file);
   const completion = await selectBaseModel(baseModel, modelName, response.text);
+  const buffer = await createAudioResponse(completion);
+
+  return buffer;
+}
+
+export async function createSpeechToSpeechResponseWithMemory(
+  baseModel: string,
+  modelName: string,
+  sessionId: string,
+  blob: ArrayBuffer
+) {
+  const file = Buffer.from(blob);
+  const [_fileName, response] = await createAudioTranscription(file);
+  const completion = await selectBaseModelWithMemory(
+    baseModel,
+    modelName,
+    sessionId,
+    response.text
+  );
   const buffer = await createAudioResponse(completion);
 
   return buffer;
