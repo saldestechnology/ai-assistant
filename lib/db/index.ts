@@ -6,7 +6,6 @@ export async function createRedisBufferMemory(sessionId: string) {
   return new BufferMemory({
     chatHistory: new RedisChatMessageHistory({
       sessionId,
-      sessionTTL: 300,
       config: {
         url: "redis://localhost:6379",
       },
