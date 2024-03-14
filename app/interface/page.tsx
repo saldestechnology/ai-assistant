@@ -12,13 +12,14 @@ interface Conversation {
 export default function Interface() {
   const recorderRef = useRef<RecordRTC | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaStream | null>(null);
-  // const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [model, setModel] = useState("gpt-3.5-turbo");
   const [baseModel, setBaseModel] = useState("openai");
   const [speechToText, setSpeechToText] = useState(true);
   const [conversation, setConversation] = useState<Conversation[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const chatLogRef = useRef<HTMLDivElement | null>(null);
 
   const handleSelectBaseModel = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setBaseModel(e.target.value);
@@ -135,6 +136,15 @@ export default function Interface() {
     initializeConversation();
   }, [initializeConversation]);
 
+  useEffect(() => {
+    if (chatLogRef.current) {
+      chatLogRef.current.scrollTo({
+        top: chatLogRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [conversation]);
+
   return (
     <div className="flex flex-row h-screen max-h-screen">
       <aside className="flex flex-col p-4 w-1/5 border-r border-zinc-950 h-full">
@@ -225,26 +235,35 @@ export default function Interface() {
             </label>
           </div>
         </header>
-        <section className="flex flex-col justify-between h-full w-full px-64 pt-8 overflow-x-auto">
+        <section
+          ref={chatLogRef}
+          className="flex flex-col justify-between h-full w-full lg:px-64 md:px-32 sm:px-16 pt-8 overflow-x-auto"
+        >
           <div className="flex flex-col items-center justify-start w-full">
             {conversation.map((conversation, index) => (
               <div
                 key={`conversation-${index}`}
-                className="flex flex-row w-full border-zinc-950 border rounded-md p-4 my-1"
+                className="flex flex-row w-full border-zinc-950 border rounded-md p-4 my-1 last:mb-4"
               >
-                <h1>
-                  <span className="text-zinc-600 mr-4">
-                    {conversation.role}:
-                  </span>
-                  {conversation.message.split("\n").map((message, index) => (
-                    <p
-                      key={`message-${index}`}
-                      className="text-white text-left py-4"
-                    >
-                      {message}
-                    </p>
-                  ))}
-                </h1>
+                <span className="text-zinc-600 mr-4 lg:w-1/12 md:w-1/6">
+                  {conversation.role}:
+                </span>
+                <div className="w-11/12 lg:w-11/12 md:w-5/6">
+                  {conversation.message.split("\n").filter((message, index) => {
+                    // If the message is empty, don't render it
+                    if (message === "") {
+                      return false;
+                    }
+                    return (
+                      <p
+                        key={`message-${index}`}
+                        className="text-white text-left py-4 first:pt-0 last:pb-0"
+                      >
+                        {message}
+                      </p>
+                    );
+                  })}
+                </div>
               </div>
             ))}
           </div>
