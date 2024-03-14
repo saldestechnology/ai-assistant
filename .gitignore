@@ -39,3 +39,6 @@ audio.wav
 
 # media
 *.webm
+
+#db
+/data/**/*.rdb
