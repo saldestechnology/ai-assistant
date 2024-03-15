@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { FaArrowUp, FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
 import { FaPenToSquare } from "react-icons/fa6";
 import RecordRTC from "recordrtc";
+import { v4 as uuid } from "uuid";
 
 interface Conversation {
   role: string;
@@ -16,6 +17,8 @@ export default function Interface() {
   const [baseModel, setBaseModel] = useState("openai");
   const [speechToText, setSpeechToText] = useState(true);
   const [conversation, setConversation] = useState<Conversation[]>([]);
+  const [availableSessions, setAvailableSessions] = useState<string[]>([]);
+  const [sessionId, setSessionId] = useState<string>("");
   const [isRecording, setIsRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,7 +49,7 @@ export default function Interface() {
       }
     }
     const request = await fetch(
-      `/api/speech-to-speech/${"my-test-session-1"}?baseModel=${baseModel}&model=${model}`,
+      `/api/speech-to-speech/${sessionId}?baseModel=${baseModel}&model=${model}`,
       {
         method: "POST",
         headers: {
@@ -110,8 +113,25 @@ export default function Interface() {
     setConversation((prev) => [...prev, { role, message }]);
   };
 
-  const initializeConversation = useCallback(async () => {
-    const request = await fetch("/api/memory/my-test-session-1");
+  const createNewSession = () => {
+    setSessionId(uuid());
+    setConversation([]);
+  };
+
+  const setCurrentSession = async (sid: string) => {
+    setConversation([]);
+    await getConversation(sid);
+  };
+
+  const getSessions = useCallback(async () => {
+    const request = await fetch("/api/memory/list");
+    const sessions = await request.json();
+    setAvailableSessions(sessions);
+  }, []);
+
+  const getConversation = async (sid: string) => {
+    setSessionId(sid);
+    const request = await fetch(`/api/memory/${sid}`);
     const messages = await request.json();
     setConversation(
       messages.map((message: any) => {
@@ -121,7 +141,7 @@ export default function Interface() {
         return { role: "Jeffrey", message: message.kwargs.content };
       })
     );
-  }, []);
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -133,8 +153,8 @@ export default function Interface() {
       });
     };
     init();
-    initializeConversation();
-  }, [initializeConversation]);
+    getSessions();
+  }, [getSessions]);
 
   useEffect(() => {
     if (chatLogRef.current) {
@@ -152,12 +172,28 @@ export default function Interface() {
           <button
             title="New chat"
             className="p-2 border bg-black text-white border-none"
+            onClick={createNewSession}
           >
             <FaPenToSquare />
           </button>
         </div>
-        <div className="flex justify-start w-full">
-          <p>Chats</p>
+        <div className="flex flex-col justify-start w-full">
+          <h3 className="">Chats</h3>
+          <ul className="my-4">
+            {availableSessions.map((session, index) => (
+              <li
+                className="py-2 border  border-zinc-950 border-x-0"
+                key={`session-${index}`}
+              >
+                <button
+                  className="w-full h-full bg-transparent border-none text-left"
+                  onClick={async () => await setCurrentSession(session)}
+                >
+                  {session}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       </aside>
       <section className="flex flex-col p-4 items-center w-full max-h-screen">
