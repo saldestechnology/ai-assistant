@@ -26,7 +26,7 @@ export async function POST(
       }
     );
   } catch (error: any) {
-    console.log(error);
+    console.error(error);
     return new Response(error.message, {
       headers: { "Content-Type": "text/plain" },
       status: 500,
