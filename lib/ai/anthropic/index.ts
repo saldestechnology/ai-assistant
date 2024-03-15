@@ -23,7 +23,5 @@ export async function createAnthropicChatCompletion(
 
   const response = await chain.invoke({ input });
 
-  console.log("createAnthropicChatCompletion", response);
-
   return response.content.toString();
 }

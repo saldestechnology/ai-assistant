@@ -23,7 +23,5 @@ export async function createMistralChatCompletion(
 
   const response = await chain.invoke({ input });
 
-  console.log("createMistralChatCompletion", response);
-
   return response.content as string;
 }

@@ -10,7 +10,7 @@ export async function POST(
   const model = searchParams.get("model") || "gpt-3.5-turbo";
   const sessionId = params.sessionId;
   const arrayBuffer = await request.arrayBuffer();
-  console.log("sessionId", sessionId, "baseModel", baseModel, "model", model);
+
   try {
     return new Response(
       await createSpeechToSpeechResponseWithMemory(

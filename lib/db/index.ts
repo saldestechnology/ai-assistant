@@ -36,11 +36,7 @@ export async function createModelWithMemory(
     memory,
   });
 
-  console.log(await memory.chatHistory.getMessages());
-
   const { response } = await chain.call({ input });
-
-  console.log({ response });
 
   return response ?? "I am sorry, I didn't understand that.";
 }
