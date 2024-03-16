@@ -65,6 +65,16 @@ export async function selectBaseModelWithMemory(
   }
 }
 
+export async function createChatResponse(
+  baseModel: string,
+  modelName: string,
+  text: string
+) {
+  const completion = await selectBaseModel(baseModel, modelName, text);
+
+  return completion;
+}
+
 export async function createSpeechToSpeechResponse(
   baseModel: string,
   modelName: string,
