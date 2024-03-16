@@ -4,7 +4,6 @@ import {
   createAudioResponse,
   createAudioTranscription,
   createOpenAIChatCompletion,
-  createOpenAIChatCompletionWithMemory,
   createOpenAIChatModel,
   createSpeechToText,
 } from "./openai";
