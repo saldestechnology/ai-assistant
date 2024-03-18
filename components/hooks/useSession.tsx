@@ -12,6 +12,7 @@ interface SessionContextProps {
   sessionId: string;
   availableSessions: string[];
   setSessionId: Dispatch<SetStateAction<string>>;
+  setAvailableSessions: Dispatch<SetStateAction<string[]>>;
 }
 
 export const SessionContext = createContext({} as SessionContextProps);
@@ -35,6 +36,7 @@ export const SessionProvider = ({ children }: React.PropsWithChildren<{}>) => {
         sessionId,
         availableSessions,
         setSessionId,
+        setAvailableSessions,
       }}
     >
       {children}
@@ -43,11 +45,13 @@ export const SessionProvider = ({ children }: React.PropsWithChildren<{}>) => {
 };
 
 export default function useSession() {
-  const { sessionId, setSessionId, availableSessions } =
+  const { sessionId, setSessionId, availableSessions, setAvailableSessions } =
     useContext(SessionContext);
 
   const createNewSession = async () => {
-    setSessionId(uuid());
+    const newSessionId = uuid();
+    setSessionId(newSessionId);
+    setAvailableSessions((prev) => [newSessionId, ...prev]);
   };
 
   const selectSession = async (session: string) => {
