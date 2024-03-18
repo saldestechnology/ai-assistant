@@ -51,7 +51,8 @@ export async function getMessagesBySessionId(sessionId: string) {
 
 export async function listSessions() {
   const client = await createRedisConnection();
-  return await client.keys("*");
+  const keys = await client.keys("*");
+  return keys.filter((key) => !key.includes("data"));
 }
 
 export async function renameSession(sessionId: string) {
@@ -88,13 +89,16 @@ export async function renameSession(sessionId: string) {
  * @returns {Promise<void>}
  * @description Set session data.
  */
-async function setSessionData(sessionId: string, data: object): Promise<void> {
+async function setSessionData(
+  sessionId: string,
+  data: object
+): Promise<string | null> {
   if (typeof data !== "object") {
     throw new Error("Data must be an object");
   }
 
   const client = await createRedisConnection();
-  const session = await client.get(sessionId);
+  const session = await client.exists(sessionId);
 
   if (!session) {
     throw new Error("Session not found");
@@ -103,25 +107,25 @@ async function setSessionData(sessionId: string, data: object): Promise<void> {
   const prevData = await client.get(`data::${sessionId}`);
 
   if (!prevData) {
-    await client.set(`data::${sessionId}`, JSON.stringify(prevData));
+    await client.set(`data::${sessionId}`, JSON.stringify(data));
   } else {
     await client.set(
       `data::${sessionId}`,
       JSON.stringify({ ...JSON.parse(prevData), ...data })
     );
   }
+
+  client.quit();
+
+  return sessionId;
 }
 
-export async function activateSessionById(sessionId: string) {
-  setSessionData(sessionId, { active: true });
-}
-
-export async function deactivateSessionById(sessionId: string) {
-  setSessionData(sessionId, { active: false });
+export async function setSessionStatusById(sessionId: string, active: boolean) {
+  return setSessionData(sessionId, { active });
 }
 
 export async function setSessionNameById(sessionId: string, name: string) {
-  setSessionData(sessionId, { name });
+  return setSessionData(sessionId, { name });
 }
 
 export async function getActiveSession() {
