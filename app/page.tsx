@@ -66,6 +66,7 @@ export default function Home() {
           onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
             setModel(e.target.value);
           }}
+          title="Select Model"
         >
           <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
           <option value="gpt-4">GPT-4</option>

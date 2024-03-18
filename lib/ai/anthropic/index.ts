@@ -1,14 +1,14 @@
-import { ChatMistralAI } from "@langchain/mistralai";
+import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
-export function createMistralModel(modelName: string) {
-  return new ChatMistralAI({
-    apiKey: process.env.MISTRAL_API_KEY,
+export function createAnthropicModel(modelName: string) {
+  return new ChatAnthropic({
+    anthropicApiKey: process.env.ANTHROPIC_API_KEY,
     modelName,
   });
 }
 
-export async function createMistralChatCompletion(
+export async function createAnthropicChatCompletion(
   modelName: string,
   input: string
 ) {
@@ -17,11 +17,11 @@ export async function createMistralChatCompletion(
     ["human", "{input}"],
   ]);
 
-  const model = createMistralModel(modelName);
+  const model = createAnthropicModel(modelName);
 
   const chain = prompt.pipe(model);
 
   const response = await chain.invoke({ input });
 
-  return response.content as string;
+  return response.content.toString();
 }
