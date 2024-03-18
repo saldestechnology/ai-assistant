@@ -15,7 +15,7 @@ export async function createRedisConnection() {
   return client;
 }
 
-export async function createRedisBufferMemory(sessionId: string) {
+export async function getRedisBufferMemory(sessionId: string) {
   return new BufferMemory({
     chatHistory: new RedisChatMessageHistory({
       sessionId,
@@ -32,7 +32,7 @@ export async function createModelWithMemory(
   sessionId: string,
   createModel: (model: string) => any
 ) {
-  const memory = await createRedisBufferMemory(sessionId);
+  const memory = await getRedisBufferMemory(sessionId);
 
   const chain = new ConversationChain({
     llm: createModel(modelName),
@@ -45,7 +45,7 @@ export async function createModelWithMemory(
 }
 
 export async function getMessagesBySessionId(sessionId: string) {
-  const memory = await createRedisBufferMemory(sessionId);
+  const memory = await getRedisBufferMemory(sessionId);
   return JSON.stringify(await memory.chatHistory.getMessages());
 }
 
@@ -80,4 +80,52 @@ export async function renameSession(sessionId: string) {
   } catch (error) {
     return false;
   }
+}
+
+/**
+ * @param sessionId {string}
+ * @param data {object}
+ * @returns {Promise<void>}
+ * @description Set session data.
+ */
+async function setSessionData(sessionId: string, data: object): Promise<void> {
+  if (typeof data !== "object") {
+    throw new Error("Data must be an object");
+  }
+
+  const client = await createRedisConnection();
+  const session = await client.get(sessionId);
+
+  if (!session) {
+    throw new Error("Session not found");
+  }
+
+  const prevData = await client.get(`data::${sessionId}`);
+
+  if (!prevData) {
+    await client.set(`data::${sessionId}`, JSON.stringify(prevData));
+  } else {
+    await client.set(
+      `data::${sessionId}`,
+      JSON.stringify({ ...JSON.parse(prevData), ...data })
+    );
+  }
+}
+
+export async function activateSessionById(sessionId: string) {
+  setSessionData(sessionId, { active: true });
+}
+
+export async function deactivateSessionById(sessionId: string) {
+  setSessionData(sessionId, { active: false });
+}
+
+export async function setSessionNameById(sessionId: string, name: string) {
+  setSessionData(sessionId, { name });
+}
+
+export async function getActiveSession() {
+  const client = await createRedisConnection();
+  const keys = await client.keys("data::*");
+  return keys.filter((key) => JSON.parse(key)?.active);
 }
