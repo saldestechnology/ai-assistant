@@ -3,17 +3,25 @@ import useSession from "./hooks/useSession";
 import useConversation from "./hooks/useConversation";
 
 export default function SessionList() {
-  const { availableSessions, createNewSession, selectSession } = useSession();
+  const {
+    sessionId,
+    availableSessions,
+    createNewSession,
+    selectSession,
+    setSessionStatus,
+  } = useSession();
   const { resetConversation, getConversationBySessionId } = useConversation();
 
   const handleSelectSession = async (session: string) => {
+    await setSessionStatus(sessionId, false);
     selectSession(session);
     resetConversation();
     await getConversationBySessionId(session);
+    await setSessionStatus(session, true);
   };
 
   const handleCreateNewSession = async () => {
-    createNewSession();
+    const session = await createNewSession();
     resetConversation();
   };
 

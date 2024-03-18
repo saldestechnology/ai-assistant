@@ -21,12 +21,13 @@ export const SessionProvider = ({ children }: React.PropsWithChildren<{}>) => {
   const [sessionId, setSessionId] = useState<string>("");
   const [availableSessions, setAvailableSessions] = useState<string[]>([]);
 
+  const init = async () => {
+    const request = await fetch("/api/memory/list");
+    const sessions = await request.json();
+    setAvailableSessions(sessions);
+  };
+
   useEffect(() => {
-    const init = async () => {
-      const request = await fetch("/api/memory/list");
-      const sessions = await request.json();
-      setAvailableSessions(sessions);
-    };
     init();
   }, []);
 
@@ -52,10 +53,21 @@ export default function useSession() {
     const newSessionId = uuid();
     setSessionId(newSessionId);
     setAvailableSessions((prev) => [newSessionId, ...prev]);
+    return newSessionId;
   };
 
   const selectSession = async (session: string) => {
     setSessionId(session);
+  };
+
+  const setSessionStatus = async (session: string, status: boolean) => {
+    const response = await fetch(
+      `/api/memory/${session}/status?state=${status ? "active" : "inactive"}`
+    );
+    if (response.status !== 200) {
+      const { error } = await response.json();
+      throw new Error(error);
+    }
   };
 
   return {
@@ -63,5 +75,6 @@ export default function useSession() {
     availableSessions,
     createNewSession,
     selectSession,
+    setSessionStatus,
   };
 }
