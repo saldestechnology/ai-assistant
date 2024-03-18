@@ -133,3 +133,20 @@ export async function getActiveSession() {
   const keys = await client.keys("data::*");
   return keys.filter((key) => JSON.parse(key)?.active);
 }
+
+export async function createSession(sessionId: string) {
+  if (!sessionId) {
+    throw new Error("Session ID is required");
+  }
+  const client = await createRedisConnection();
+  const session = await client.exists(sessionId);
+
+  if (session) {
+    throw new Error("Session already exists");
+  }
+
+  await client.set(sessionId, JSON.stringify({}));
+  client.quit();
+
+  return sessionId;
+}
