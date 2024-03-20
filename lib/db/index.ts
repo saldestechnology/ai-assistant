@@ -103,13 +103,13 @@ async function setSessionData(
     throw new Error("Session not found");
   }
 
-  const prevData = await client.get(`data::${sessionId}`);
+  const prevData = await client.get(`data:${sessionId}`);
 
   if (!prevData) {
-    await client.set(`data::${sessionId}`, JSON.stringify(data));
+    await client.set(`data:${sessionId}`, JSON.stringify(data));
   } else {
     await client.set(
-      `data::${sessionId}`,
+      `data:${sessionId}`,
       JSON.stringify({ ...JSON.parse(prevData), ...data })
     );
   }
@@ -129,7 +129,7 @@ export async function setSessionNameById(sessionId: string, name: string) {
 
 export async function getActiveSession() {
   const client = await createRedisConnection();
-  const keys = await client.keys("data::*");
+  const keys = await client.keys("data:*");
   return keys.filter((key) => JSON.parse(key)?.active);
 }
 
