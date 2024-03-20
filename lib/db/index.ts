@@ -4,7 +4,6 @@ import { ConversationChain } from "langchain/chains";
 import { createClient } from "redis";
 import { createChatResponse } from "../ai";
 import { summarizeConversationPrompt } from "../ai/prompts";
-import { create } from "domain";
 
 export async function createRedisConnection() {
   const client = createClient({
@@ -15,7 +14,7 @@ export async function createRedisConnection() {
   return client;
 }
 
-export async function createRedisBufferMemory(sessionId: string) {
+export async function getRedisBufferMemory(sessionId: string) {
   return new BufferMemory({
     chatHistory: new RedisChatMessageHistory({
       sessionId,
@@ -32,7 +31,7 @@ export async function createModelWithMemory(
   sessionId: string,
   createModel: (model: string) => any
 ) {
-  const memory = await createRedisBufferMemory(sessionId);
+  const memory = await getRedisBufferMemory(sessionId);
 
   const chain = new ConversationChain({
     llm: createModel(modelName),
@@ -45,13 +44,15 @@ export async function createModelWithMemory(
 }
 
 export async function getMessagesBySessionId(sessionId: string) {
-  const memory = await createRedisBufferMemory(sessionId);
-  return JSON.stringify(await memory.chatHistory.getMessages());
+  const memory = await getRedisBufferMemory(sessionId);
+  const messages = await memory.chatHistory.getMessages();
+  return JSON.stringify(messages);
 }
 
 export async function listSessions() {
   const client = await createRedisConnection();
-  return await client.keys("*");
+  const keys = await client.keys("*");
+  return keys.filter((key) => !key.includes("data"));
 }
 
 export async function renameSession(sessionId: string) {
@@ -59,7 +60,6 @@ export async function renameSession(sessionId: string) {
     const client = await createRedisConnection();
     const chatHistory = await getMessagesBySessionId(sessionId);
     const messages = JSON.parse(chatHistory);
-
     const summary = messages
       .map((message: any) =>
         message.id.includes("HumanMessage")
@@ -80,4 +80,71 @@ export async function renameSession(sessionId: string) {
   } catch (error) {
     return false;
   }
+}
+
+/**
+ * @param sessionId {string}
+ * @param data {object}
+ * @returns {Promise<void>}
+ * @description Set session data.
+ */
+async function setSessionData(
+  sessionId: string,
+  data: object
+): Promise<string | null> {
+  if (typeof data !== "object") {
+    throw new Error("Data must be an object");
+  }
+
+  const client = await createRedisConnection();
+  const session = await client.exists(sessionId);
+
+  if (!session) {
+    throw new Error("Session not found");
+  }
+
+  const prevData = await client.get(`data:${sessionId}`);
+
+  if (!prevData) {
+    await client.set(`data:${sessionId}`, JSON.stringify(data));
+  } else {
+    await client.set(
+      `data:${sessionId}`,
+      JSON.stringify({ ...JSON.parse(prevData), ...data })
+    );
+  }
+
+  client.quit();
+
+  return sessionId;
+}
+
+export async function setSessionStatusById(sessionId: string, active: boolean) {
+  return setSessionData(sessionId, { active });
+}
+
+export async function setSessionNameById(sessionId: string, name: string) {
+  return setSessionData(sessionId, { name });
+}
+
+export async function getActiveSession() {
+  const client = await createRedisConnection();
+  const keys = await client.keys("data:*");
+  return keys.filter((key) => JSON.parse(key)?.active);
+}
+
+export async function createSession(sessionId: string) {
+  if (!sessionId) {
+    throw new Error("Session ID is required");
+  }
+  const client = await createRedisConnection();
+  const session = await client.exists(sessionId);
+
+  if (session) {
+    throw new Error("Session already exists");
+  }
+
+  const memory = await getRedisBufferMemory(sessionId);
+
+  return memory.chatHistory.toJSON();
 }

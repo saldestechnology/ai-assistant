@@ -1,8 +1,16 @@
 "use client";
-import ChatLog from "@/components/ChatLog";
+import dynamic from "next/dynamic";
 import SessionList from "@/components/SessionList";
-import { ConversationProvider, SessionProvider } from "@/components/hooks";
+import {
+  ConversationProvider,
+  SessionProvider,
+  useConversation,
+} from "@/components/hooks";
 import { useState } from "react";
+
+const ChatLog = dynamic(() => import("@/components/ChatLog"), {
+  ssr: false,
+});
 
 export default function Interface() {
   const [model, setModel] = useState("gpt-3.5-turbo");

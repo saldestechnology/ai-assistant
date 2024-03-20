@@ -1,4 +1,4 @@
-import { createRedisBufferMemory } from "@/lib/db";
+import { getRedisBufferMemory } from "@/lib/db";
 import fs from "fs";
 import { ConversationChain } from "langchain/chains";
 import { ChatOpenAI } from "@langchain/openai";
@@ -28,6 +28,7 @@ export async function createAudioTranscription(
     await openai.audio.transcriptions.create({
       file: fileStream,
       model: "whisper-1",
+      language: "en",
     }),
   ];
 }
@@ -60,7 +61,7 @@ export async function createOpenAIChatCompletionWithMemory(
 ) {
   const chain = new ConversationChain({
     llm: createOpenAIChatModel(modelName),
-    memory: await createRedisBufferMemory(sessionId),
+    memory: await getRedisBufferMemory(sessionId),
   });
 
   const { response } = await chain.call({ input });
@@ -88,6 +89,7 @@ export async function createSpeechToText(
     file: fileStream,
     model: "whisper-1",
     response_format: "text",
+    language: "en",
   });
 
   return [fileName, response];
