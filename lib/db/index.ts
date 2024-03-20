@@ -4,7 +4,6 @@ import { ConversationChain } from "langchain/chains";
 import { createClient } from "redis";
 import { createChatResponse } from "../ai";
 import { summarizeConversationPrompt } from "../ai/prompts";
-import { create } from "domain";
 
 export async function createRedisConnection() {
   const client = createClient({
@@ -46,7 +45,8 @@ export async function createModelWithMemory(
 
 export async function getMessagesBySessionId(sessionId: string) {
   const memory = await getRedisBufferMemory(sessionId);
-  return JSON.stringify(await memory.chatHistory.getMessages());
+  const messages = await memory.chatHistory.getMessages();
+  return JSON.stringify(messages);
 }
 
 export async function listSessions() {
@@ -60,7 +60,6 @@ export async function renameSession(sessionId: string) {
     const client = await createRedisConnection();
     const chatHistory = await getMessagesBySessionId(sessionId);
     const messages = JSON.parse(chatHistory);
-
     const summary = messages
       .map((message: any) =>
         message.id.includes("HumanMessage")
@@ -145,8 +144,7 @@ export async function createSession(sessionId: string) {
     throw new Error("Session already exists");
   }
 
-  await client.set(sessionId, JSON.stringify({}));
-  client.quit();
+  const memory = await getRedisBufferMemory(sessionId);
 
-  return sessionId;
+  return memory.chatHistory.toJSON();
 }

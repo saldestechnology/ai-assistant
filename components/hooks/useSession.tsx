@@ -53,6 +53,13 @@ export default function useSession() {
     const newSessionId = uuid();
     setSessionId(newSessionId);
     setAvailableSessions((prev) => [newSessionId, ...prev]);
+    const response = await fetch(`/api/memory/${newSessionId}`, {
+      method: "POST",
+    });
+    if (response.status !== 201) {
+      const { error } = await response.json();
+      throw new Error(error);
+    }
     return newSessionId;
   };
 

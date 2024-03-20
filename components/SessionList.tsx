@@ -1,6 +1,7 @@
 import { FaPenToSquare } from "react-icons/fa6";
 import useSession from "./hooks/useSession";
 import useConversation from "./hooks/useConversation";
+import { useCallback, useEffect } from "react";
 
 export default function SessionList() {
   const {
@@ -10,20 +11,37 @@ export default function SessionList() {
     selectSession,
     setSessionStatus,
   } = useSession();
-  const { resetConversation, getConversationBySessionId } = useConversation();
+  const { conversation, resetConversation, getConversationBySessionId } =
+    useConversation();
+
+  const deactivateCurrentSession = async () => {
+    if (sessionId) {
+      await setSessionStatus(sessionId, false);
+    }
+  };
 
   const handleSelectSession = async (session: string) => {
-    await setSessionStatus(sessionId, false);
+    await deactivateCurrentSession();
     selectSession(session);
     resetConversation();
     await getConversationBySessionId(session);
-    await setSessionStatus(session, true);
   };
 
   const handleCreateNewSession = async () => {
-    const session = await createNewSession();
+    await deactivateCurrentSession();
     resetConversation();
+    await createNewSession();
   };
+
+  const watchConversation = useCallback(async () => {
+    if (conversation.length > 1) {
+      await setSessionStatus(sessionId, true);
+    }
+  }, [conversation, sessionId, setSessionStatus]);
+
+  useEffect(() => {
+    watchConversation();
+  }, [conversation, watchConversation]);
 
   return (
     <aside className="flex flex-col p-4 w-1/5 border-r border-zinc-950 h-full">

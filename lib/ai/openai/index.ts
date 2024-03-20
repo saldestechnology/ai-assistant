@@ -28,6 +28,7 @@ export async function createAudioTranscription(
     await openai.audio.transcriptions.create({
       file: fileStream,
       model: "whisper-1",
+      language: "en",
     }),
   ];
 }
@@ -88,6 +89,7 @@ export async function createSpeechToText(
     file: fileStream,
     model: "whisper-1",
     response_format: "text",
+    language: "en",
   });
 
   return [fileName, response];
